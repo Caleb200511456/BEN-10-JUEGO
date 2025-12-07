@@ -4,11 +4,10 @@
 
 class Game {
 public:
-    //Constructor y Destructor
+//Constructor y Destructor
     Game();
     ~Game();
 
-    //Función principal para arrancar el juego
     void run();
 
 private:
@@ -17,15 +16,14 @@ private:
     void update();
     void render();
 
-//variables del Motor
-sf::RenderWindow window;
-b2WorldId worldId;
+    sf::RenderWindow window;
+    b2WorldId worldId;
 
-//Variables del Juego por ahora solo BEN
-b2BodyId benBodyId;
-sf::RectangleShape benShape;
-
-//Suelo
-b2BodyId groundId;
-sf::RectangleShape groundShape;
+    b2BodyId benBodyId;
+    sf::Texture benTexture; // La imagen en memoria
+    sf::Sprite benSprite;   // El dibujo en pantalla
+    
+    //Suelo
+    b2BodyId groundId;
+    sf::RectangleShape groundShape;
 };
