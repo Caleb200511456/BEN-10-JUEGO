@@ -23,9 +23,9 @@ Game::Game() {
     createPlatform(500.0f, 200.0f, 150.0f, 20.0f); //Arriba centro
 
     //3.3.Muro alto a la izquierda para que no se salga el ben
-    createPlatform(-10.0f, 300.0f, 20.0f, 600.0f);
+    //createPlatform(-10.0f, 300.0f, 20.0f, 600.0f);
     //3.4.Un muro a la derecha
-    createPlatform(810.0f, 300.0f, 20.0f, 600.0f);
+    //createPlatform(810.0f, 300.0f, 20.0f, 600.0f);
     
 
     // 4. Crear Cuerpo Físico de Ben (La caja invisible que choca)
@@ -168,6 +168,17 @@ void Game::update() {
 
   b2Vec2 pos = b2Body_GetPosition(benBodyId);
   benSprite.setPosition(pos.x,pos.y);
+
+  //Hacemos la zona de Muerte GAME OVER
+  //Si ben cae muy abajo (Y mayor a 800 pixeles)
+ if (pos.y > 800.0f) {
+        // 1. Lo regresamos al inicio (400, -100)
+        // El ángulo lo dejamos en 0 (b2Rot_Identity si usas v3, o simplemente 0.0f en la función SetTransform)
+        b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0f, 0.0});//1.0 es Seno y 0.0 es Coseno asi se movera Ben
+        
+        // 2. Le quitamos la velocidad para que no siga cayendo a toda pastilla
+        b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
+    }
 }
 
 void Game::render(){
