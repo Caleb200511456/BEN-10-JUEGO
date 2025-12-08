@@ -32,4 +32,12 @@ private:
     
     //Suelo
     std::vector<sf::RectangleShape> platformShapes; //Para aplicar dibujos para el escenario
+    b2BodyId enemyBodyId; //El cuerpo fisico del enemigo
+    
+    //Enemigo
+    sf::RectangleShape enemyShape; //El dibujo del enemigo(Cubo rojo)
+    float enemySpeed; //Velocidad del enemigo
+
+    //META DEL NIVEL 
+    sf::CircleShape goalShape; //Esfera de energia 
 };

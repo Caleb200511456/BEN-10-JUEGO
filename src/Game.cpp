@@ -67,6 +67,41 @@ Game::Game() {
     benSprite.setScale(1.5f, 1.5f);
     animationTimer = 0.0f;
     currentFrame = 0; 
+
+    //6.Crear el enemigo(Dron)
+    b2BodyDef enemyDef = b2DefaultBodyDef();
+    enemyDef.type = b2_dynamicBody;//Hacer que se mueva
+    enemyDef.position = {600.0f, 400.0f};
+    //Bloqueamos rotación para que no ruede
+    enemyDef.fixedRotation = true;
+    enemyBodyId = b2CreateBody(worldId, &enemyDef);
+
+    //Cramos forma fisica de la caja
+    b2Polygon enemyBox = b2MakeBox(15.0f, 15.0f); 
+    b2ShapeDef enemyShapeDef = b2DefaultShapeDef();
+    enemyShapeDef.density = 1.0f;
+    b2CreatePolygonShape(enemyBodyId, &enemyShapeDef, &enemyBox);
+
+    //Forma Gráfica (Cubito rojo)
+    enemyShape.setSize(sf::Vector2f(30.0f, 30.0f));
+    enemyShape.setOrigin(15.0f, 15.0f);
+    enemyShape.setFillColor(sf::Color::Red); 
+
+    //Velocidad Inicial
+    enemySpeed = 100.0f; //Se mueva a la derecha
+
+    //7.Crear la META(TARJETA SUMO)
+    goalShape.setRadius(20.0f); //Tamaño de la esfera
+    goalShape.setFillColor(sf::Color::Yellow);//Amarillo para la tarjeta de Sumo
+    goalShape.setOutlineThickness(2.0f);
+    goalShape.setOutlineColor(sf::Color::White);
+
+    //Centrar el punto de origen
+    goalShape.setOrigin(20.0f, 20.0f);
+
+    //Posicion: En la plataforma floatante del centro-arriba
+    goalShape.setPosition(500.0f,150.0f);
+
 }
 
 Game::~Game() {
@@ -179,6 +214,51 @@ void Game::update() {
         // 2. Le quitamos la velocidad para que no siga cayendo a toda pastilla
         b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
     }
+
+//IA DEL ENEMIGO 
+    
+    // 1. Obtener posición actual
+    b2Vec2 enemyPos = b2Body_GetPosition(enemyBodyId);
+    enemyShape.setPosition(enemyPos.x, enemyPos.y);
+
+    // 2. Lógica de Patrulla
+    // Si llegó al borde DERECHO (680) Y todavía quiere ir a la derecha (> 0)
+    if (enemyPos.x > 680.0f && enemySpeed > 0) {
+        enemySpeed = -100.0f; // ¡Cambio a Izquierda!
+    }
+    // Si llegó al borde IZQUIERDO (520) Y todavía quiere ir a la izquierda (< 0)
+    else if (enemyPos.x < 520.0f && enemySpeed < 0) {
+        enemySpeed = 100.0f;  // ¡Cambio a Derecha!
+    }
+
+    // 3. Aplicar la velocidad decidida
+    b2Vec2 enemyVel = b2Body_GetLinearVelocity(enemyBodyId);
+    enemyVel.x = enemySpeed; 
+    b2Body_SetLinearVelocity(enemyBodyId, enemyVel);
+
+    //Colision(hacer que ben muera al tocar el dron)
+    //Preguntamos: ¿El rctangulo de Ben se cruza con el del Enemigo?
+    if(benSprite.getGlobalBounds().intersects(enemyShape.getGlobalBounds())){
+    
+    //GAME OVER PARA BEN
+    //1.Teletransportar al inicio (400, -100) de pie (1.0, 0.0) significa (seno,coseno)
+    b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0, 0.0f});
+
+    //2.Quitamos velocidad(franar)
+    b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
+
+    std::cout << "¡Ben ha sido capturado!" << std::endl;
+    }
+    //VICTORIA: CUANDO BEN TOCA LA META
+    if(benSprite.getGlobalBounds().intersects(goalShape.getGlobalBounds())){
+        //GANASTEEE
+        std::cout << "¡NIVEL COMPLTADO! ERES UN HEROE." << std::endl;
+
+        //PReiniciamos el nivel para vovler a jugar 
+        //Proximamente agraremos nivel 2 (por el momento se queda asi)
+        b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0, 0.0f});
+        b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
+    }
 }
 
 void Game::render(){
@@ -200,7 +280,11 @@ void Game::render(){
     for (const auto& shape : platformShapes) {
         window.draw(shape);
     }
-
+    
+    //Dibujar META
+    window.draw(goalShape); 
+    //Dibujar el enemigo
+    window.draw(enemyShape);
     // Dibujar a Ben
     window.draw(benSprite);
     window.display();
