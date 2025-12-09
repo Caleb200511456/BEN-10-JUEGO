@@ -5,7 +5,7 @@
 Game::Game() {
     // 1. Iniciar Ventana
     window.create(sf::VideoMode(800, 600), "Ben 10: Savage Pursuit - Sprite Version");
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(60); 
 
     // 2. Iniciar Física (Box2D v3)
     b2WorldDef worldDef = b2DefaultWorldDef();
@@ -114,6 +114,8 @@ Game::Game() {
     //Posicion: En la plataforma floatante del centro-arriba
     goalShape.setPosition(500.0f,150.0f);
 
+    shootCooldown = 0.0f; //Listo para disparar
+
 }
 
 Game::~Game() {
@@ -173,125 +175,162 @@ void Game::processEvents() {
                         benSprite.setScale(1.5f, 1.5f);
                     }
                 }
+                //DISPARO
+                if(event.key.code == sf::Keyboard::X && isHeatblast && shootCooldown <= 0.0f){
+                    Projectile newProj;
+                
+                //1.Apariencia
+                newProj.shape.setRadius(10.0f);
+                newProj.shape.setFillColor(sf::Color(255, 165, 0)); //Naranja de fuego
+                newProj.shape.setOrigin(10.0f, 10.0f); //Ajuste de centro
+                //2.Posicion de salida(Desde el centro de fuego)
+                sf::Vector2f benPos = benSprite.getPosition();
+                //Ajustamos un poco la altura para que salga de las manos/pecho
+                newProj.shape.setPosition(benPos.x, benPos.y - 15.0f);
+                //3.Direccion
+                if(benSprite.getScale().x > 0){
+                    newProj.speed = 600.0f; //Disparo a la derecha
+                }else{
+                    newProj.speed = -600.0f; //Disparo a la izquiersa
+                }
+                newProj.destroy = false;
+                newProj.lifetime = 0.0f; 
+                //4.Agregar al cargador
+                projectiles.push_back(newProj);
+                //Recalentar el arma
+                shootCooldown = 0.4f; //Esperar 0.4 seg para el siguiente tiro
+                std::cout << "¡Fiuuu! (Disparo)" << std::endl;
+                }
             }
         }
     }
 
 void Game::update() {
-  //1.Obtener la velocidad física de ben 
-  b2Vec2 velocity = b2Body_GetLinearVelocity(benBodyId);
-  bool isMoving = false; //Aplicamos bandera para saber si corremos
+    // Esto mide el tiempo real entre "fotos". Arregla la velocidad loca.
+    float dt = dtClock.restart().asSeconds(); 
 
-  //Definimos que tamaño debemos tener
-  float currentScale = 1.5f; //Tamaño normal de ben
-  if(isHeatblast){
-    currentScale = 2.2f; //Tamaño para fuego grande
-  }
-
-  //2.Controles
-  //Vamo a la derecha
-  if(sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
-    velocity.x = 200.0f; //Asi aplicamos que se mueva la derecha en el eje x
-    benSprite.setScale(currentScale, currentScale);
-    isMoving = true; //Aqui aplica que ben se esta moviendo
-  }
-  //Vamo a la Izquierda
-  else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
-    velocity.x = -200.0f;//Aplicamos que se mueva a la izquierda en el eje x
-    benSprite.setScale(-currentScale, currentScale);
-    isMoving = true; // Se esta moviendo a la izquierda :D
-  }
-  //QUIETOO
-  else{
-    velocity.x = 0.0f;
-    isMoving = false;
-  }
-  //3.Sistema de Animación
-  //Si somos Fuego, No hacemos nada en este, se queda con la pose que pusimosal presionar Z)
-  if(isHeatblast){
-    if(isMoving){
-        //A. Cronometro
-        animationTimer += 1.0f / 60.0f;
-        if(animationTimer >= 0.1f){
-            animationTimer = 0.0f;
-            currentFrame++;
-            if(currentFrame >= 6) currentFrame = 0;
-        }
-        //B.Listas Maestras
-        int fuegoX[] = {16, 67, 106, 155, 210, 250};
-        int fuegoW[] = {25, 20, 34, 32, 21, 36};
-        //C.Obtener cuadro actual 
-        int currentX = fuegoX[currentFrame];
-        int currentW = fuegoW[currentFrame];
-        //D.Aplicar recorte (Con Y=82)
-        benSprite.setTextureRect(sf::IntRect(currentX, 82, currentW, 55));
-        //E.Centrado Dinamico
-        benSprite.setOrigin(currentW / 2.0f, 26.5f);
-    }
-    else{
-        //QUIETO
-        benSprite.setTextureRect(sf::IntRect(9, 11, 35, 53));
-        benSprite.setOrigin(17.5f, 26.5f);
-    }
-  }
-  else{
-  if(isMoving){
-
-    //3.1.Avanzar el cronómetro(Se suma el tiempo que paso, aproximado de 1/60seg)
-    animationTimer += 1.0f / 60.0f;
-
-    //3.2.Aplicar el cambio de dibujo
-    if(animationTimer >= 0.1f){
-        animationTimer = 0.0f; //Reiniciamos el cronometro
-        currentFrame++; //Siguiente dibujo
+    // 1. Obtener la velocidad física de ben 
+    b2Vec2 velocity = b2Body_GetLinearVelocity(benBodyId);
+    bool isMoving = false; // Aplicamos bandera para saber si corremos
     
-        //Si llegamos al dibujo 6, regresar al primer dibujo(Loop)
-        if(currentFrame >= 6){
-            currentFrame = 0;
+    // Definimos que tamaño debemos tener
+    float currentScale = 1.5f; // Tamaño normal de ben
+    if(isHeatblast){
+        currentScale = 2.2f; // Tamaño para fuego grande
+    }
+
+    // 2. Controles
+    // Vamo a la derecha
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
+        velocity.x = 200.0f; // Asi aplicamos que se mueva la derecha en el eje x
+        benSprite.setScale(currentScale, currentScale);
+        isMoving = true; // Aqui aplica que ben se esta moviendo
+    }
+    // Vamo a la Izquierda
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+        velocity.x = -200.0f; // Aplicamos que se mueva a la izquierda en el eje x
+        benSprite.setScale(-currentScale, currentScale);
+        isMoving = true; // Se esta moviendo a la izquierda :D
+    }
+    // QUIETOO
+    else{
+        velocity.x = 0.0f;
+        isMoving = false;
+    }
+
+    // 3. Sistema de Animación
+    // Si somos Fuego, No hacemos nada en este, se queda con la pose que pusimos al presionar Z)
+    if(isHeatblast){
+        if(isMoving){
+            // A. Cronometro
+            // CAMBIO: Usamos 'dt' en vez de 1.0/60.0f para suavidad
+            animationTimer += dt; 
+            
+            if(animationTimer >= 0.1f){
+                animationTimer = 0.0f;
+                currentFrame++;
+                if(currentFrame >= 6) currentFrame = 0;
+            }
+            // B. Listas Maestras
+            int fuegoX[] = {16, 67, 106, 155, 210, 250};
+            int fuegoW[] = {25, 20, 34, 32, 21, 36};
+            
+            // C. Obtener cuadro actual 
+            int currentX = fuegoX[currentFrame];
+            int currentW = fuegoW[currentFrame];
+            
+            // D. Aplicar recorte (Con Y=82)
+            benSprite.setTextureRect(sf::IntRect(currentX, 82, currentW, 55));
+            
+            // E. Centrado Dinamico
+            benSprite.setOrigin(currentW / 2.0f, 26.5f);
+        }
+        else{
+            // QUIETO
+            benSprite.setTextureRect(sf::IntRect(9, 11, 35, 53));
+            benSprite.setOrigin(17.5f, 26.5f);
         }
     }
-    //3.3.Calcular el recorte de correr obtenidos en la imagen
-    // Lista exacta de tus coordenadas X:
-        int walkingFramesX[] = {17, 78, 137, 181, 238, 295};
+    else{ 
+        // Si somos BEN
+        if(isMoving){
+            // 3.1. Avanzar el cronómetro (Se suma el tiempo real dt)
+            // CAMBIO: Usamos 'dt' aquí también
+            animationTimer += dt; 
 
-        // Usamos el 'currentFrame' para elegir el número de la lista
-        int frameX = walkingFramesX[currentFrame]; 
+            // 3.2. Aplicar el cambio de dibujo
+            if(animationTimer >= 0.1f){
+                animationTimer = 0.0f; // Reiniciamos el cronometro
+                currentFrame++; // Siguiente dibujo
+            
+                // Si llegamos al dibujo 6, regresar al primer dibujo(Loop)
+                if(currentFrame >= 6){
+                    currentFrame = 0;
+                }
+            }
+            // 3.3. Calcular el recorte de correr obtenidos en la imagen
+            // Lista exacta de tus coordenadas X:
+            int walkingFramesX[] = {17, 78, 137, 181, 238, 295};
 
-        // Actualizamos el recorte usando la X exacta de la lista
-        // (Y=382, Ancho=47, Alto=79 según tus medidas anteriores)
-        benSprite.setTextureRect(sf::IntRect(frameX, 382, 46.5, 79));
+            // Usamos el 'currentFrame' para elegir el número de la lista
+            int frameX = walkingFramesX[currentFrame]; 
 
-        // Ajustamos el origen para el ancho de 47
-        benSprite.setOrigin(23.5f, 39.5f);
+            // Actualizamos el recorte usando la X exacta de la lista
+            // (Y=382, Ancho=47, Alto=79 según tus medidas anteriores)
+            benSprite.setTextureRect(sf::IntRect(frameX, 382, 47, 79));
 
-  }
-  else{
-    //3.4.Si esta quieto volver al dibujo original 
-    //Datos del dibujo original: X=8, Y=23, Alto= 51, Largo=84 aprox
-    currentFrame = 0; //Resetear para que al correr empiece en el dibujo 1
-    benSprite.setTextureRect(sf::IntRect(8, 23, 51, 84));
-    benSprite.setOrigin(25.5f, 42.0f);
-  }
-}
-  //4.Aplicar las fisicas y sincronizamos
-  b2Body_SetLinearVelocity(benBodyId, velocity);
-  b2World_Step(worldId, 1.0f / 60.0f, 4);
+            // Ajustamos el origen para el ancho de 47
+            benSprite.setOrigin(23.5f, 39.5f);
+        }
+        else{
+            // 3.4. Si esta quieto volver al dibujo original 
+            // Datos del dibujo original: X=8, Y=23, Alto= 51, Largo=84 aprox
+            currentFrame = 0; // Resetear para que al correr empiece en el dibujo 1
+            benSprite.setTextureRect(sf::IntRect(8, 23, 51, 84));
+            benSprite.setOrigin(25.5f, 42.0f);
+        }
+    }
 
-  b2Vec2 pos = b2Body_GetPosition(benBodyId);
-  benSprite.setPosition(pos.x,pos.y);
+    // 4. Aplicar las fisicas y sincronizamos
+    b2Body_SetLinearVelocity(benBodyId, velocity);
+    // Fisica se queda fija en 1/60 para que Box2D no se rompa
+    b2World_Step(worldId, 1.0f / 60.0f, 4);
 
-  //Hacemos la zona de Muerte GAME OVER
-  //Si ben cae muy abajo (Y mayor a 800 pixeles)
- if (pos.y > 800.0f) {
+    b2Vec2 pos = b2Body_GetPosition(benBodyId);
+    benSprite.setPosition(pos.x,pos.y);
+
+    // Hacemos la zona de Muerte GAME OVER
+    // Si ben cae muy abajo (Y mayor a 800 pixeles)
+    if (pos.y > 800.0f) {
         // 1. Lo regresamos al inicio (400, -100)
         // El ángulo lo dejamos en 0 (b2Rot_Identity si usas v3, o simplemente 0.0f en la función SetTransform)
-        b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0f, 0.0});//1.0 es Seno y 0.0 es Coseno asi se movera Ben
+        b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0f, 0.0});// 1.0 es Seno y 0.0 es Coseno asi se movera Ben
         
         // 2. Le quitamos la velocidad para que no siga cayendo a toda pastilla
         b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
     }
 
-//IA DEL ENEMIGO 
+    // IA DEL ENEMIGO 
     
     // 1. Obtener posición actual
     b2Vec2 enemyPos = b2Body_GetPosition(enemyBodyId);
@@ -312,58 +351,91 @@ void Game::update() {
     enemyVel.x = enemySpeed; 
     b2Body_SetLinearVelocity(enemyBodyId, enemyVel);
 
-    //Colision(hacer que ben muera al tocar el dron)
-    //Preguntamos: ¿El rctangulo de Ben se cruza con el del Enemigo?
+    // Colision(hacer que ben muera al tocar el dron)
+    // Preguntamos: ¿El rctangulo de Ben se cruza con el del Enemigo?
     if(benSprite.getGlobalBounds().intersects(enemyShape.getGlobalBounds())){
     
-    //GAME OVER PARA BEN
-    //1.Teletransportar al inicio (400, -100) de pie (1.0, 0.0) significa (seno,coseno)
-    b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0, 0.0f});
+        // GAME OVER PARA BEN
+        // 1.Teletransportar al inicio (400, -100) de pie (1.0, 0.0) significa (seno,coseno)
+        b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0, 0.0f});
 
-    //2.Quitamos velocidad(franar)
-    b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
+        // 2.Quitamos velocidad(franar)
+        b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
 
-    std::cout << "¡Ben ha sido capturado!" << std::endl;
+        std::cout << "¡Ben ha sido capturado!" << std::endl;
     }
-    //VICTORIA: CUANDO BEN TOCA LA META
+
+    // VICTORIA: CUANDO BEN TOCA LA META
     if(benSprite.getGlobalBounds().intersects(goalShape.getGlobalBounds())){
-        //GANASTEEE
+        // GANASTEEE
         std::cout << "¡NIVEL COMPLTADO! ERES UN HEROE." << std::endl;
 
-        //PReiniciamos el nivel para vovler a jugar 
-        //Proximamente agraremos nivel 2 (por el momento se queda asi)
+        // PReiniciamos el nivel para vovler a jugar 
+        // Proximamente agraremos nivel 2 (por el momento se queda asi)
         b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0, 0.0f});
         b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
     }
+    if (shootCooldown > 0.0f){
+        shootCooldown -= dt; //Restamos el tiempo que pasó
+    }
+    //2.Actualización de balas
+    for(size_t i = 0; i < projectiles.size(); i++){
+        
+        // 1. Mover USANDO dt (Tiempo real)
+        // Esto evita que salgan como líneas
+        projectiles[i].shape.move(projectiles[i].speed * dt, 0.0f); 
+        //Envejecer la bala
+        projectiles[i].lifetime += dt;
+        //¿Murio bala vieja?
+        if (projectiles[i].lifetime > 2.0f){
+            projectiles[i].destroy = true;
+        }
+        //Colision de bala vs dron
+        //Si la bala toca al enemigo:
+        if(projectiles[i].shape.getGlobalBounds().intersects(enemyShape.getGlobalBounds())){
+            projectiles[i].destroy = true; //la bala explota
+        //Matar al enemigo 
+        b2Body_SetTransform(enemyBodyId, {-1000.0f, -1000.0f}, {1.0f, 0.0f});
+        enemySpeed = 0; //Para que ya no se mueva
+        
+        std::cout << "¡ENEMIGO ELIMINADO!" << std::endl;
+        }
+    }
+    // BORRAR BALAS VIEJAS
+    auto iterator = std::remove_if(projectiles.begin(), projectiles.end(), [](const Projectile& p){ return p.destroy;});
+    projectiles.erase(iterator, projectiles.end());
 }
 
 void Game::render(){
-    window.clear(sf::Color::Black); // Limpiar pantalla
+    window.clear(sf::Color::Black); // 1. Limpiar pantalla
 
-    // Obtenemos la posición de Ben
+    // --- CÁMARA ---
     sf::Vector2f benPos = benSprite.getPosition();
-
-    // Creamos una "Cámara" del tamaño de nuestra ventana (800x600)
     sf::View camera(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(800.0f, 600.0f));
-
-    // Le decimos a la cámara: "Mira a Ben"
-    // Por ahora, que lo siga en todo:
     camera.setCenter(benPos);
-    // Aplicamos la cámara a la ventana
     window.setView(camera);
 
-    // Dibujar plataformas
+    // --- DIBUJAR TODO ---
+
+    // 1. Plataformas
     for (const auto& shape : platformShapes) {
         window.draw(shape);
     }
     
-    //Dibujar META
+    // 2. Objetos
     window.draw(goalShape); 
-    //Dibujar el enemigo
     window.draw(enemyShape);
-    // Dibujar a Ben
+    
+    // 3. Balas (¡AQUÍ ES SU LUGAR!)
+    for (const auto& proj : projectiles){
+        window.draw(proj.shape);
+    }
+
+    // 4. Ben (Lo dibujamos al final para que salga encima de todo)
     window.draw(benSprite);
-    window.display();
+
+    // --- MOSTRAR PANTALLA (SOLO UNA VEZ AL FINAL) ---
+    window.display(); 
 }
 
 //Aplicacion de las plataformas

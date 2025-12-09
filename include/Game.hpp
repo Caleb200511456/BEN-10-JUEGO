@@ -3,6 +3,13 @@
 #include <box2d/box2d.h>
 #include <vector> 
 
+struct Projectile{
+    sf::CircleShape shape; //La forma(bola naranja)
+    float speed;
+    bool destroy;
+    float lifetime; 
+}; 
+
 class Game {
 public:
 //Constructor y Destructor
@@ -45,4 +52,11 @@ private:
 
     //META DEL NIVEL 
     sf::CircleShape goalShape; //Esfera de energia 
+
+    //SISTEMA DE COMBATE
+    std::vector<Projectile> projectiles; //Lista que crece y se encoge
+
+    //Reloj del sistema
+    sf::Clock dtClock; //Cronometro
+    float shootCooldown; //Tiempo de espera entre disparos
 };
