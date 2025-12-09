@@ -24,7 +24,12 @@ private:
     //BEN 10
     b2BodyId benBodyId;
     sf::Texture benTexture; // La imagen en memoria
-    sf::Sprite benSprite;   // El dibujo en pantalla 
+    sf::Sprite benSprite;   // El dibujo en pantalla
+    
+    //Variables del OMNITRIX
+    //Comenzamos con fuego(heatblast)
+    sf::Texture heatblastTexture; //imagen de fuego en memoria
+    bool isHeatblast; //Para ver si esta transformado
 
     //Animación
     float animationTimer; //Cronometro para cambiar el dibujo

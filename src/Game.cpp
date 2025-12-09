@@ -45,7 +45,7 @@ Game::Game() {
     // A. Cargar la imagen
     sf::Image benImage;
     if (!benImage.loadFromFile("assets/images/ben10.png")) {
-        std::cerr << "ERROR cargarndo imagen ben10.png" << std::endl;
+        std::cerr << "ERROR cargando imagen ben10.png" << std::endl;
     }
     //Especificar que lo que sea magenta lo ponga transparente
     benImage.createMaskFromColor(sf::Color::Magenta);
@@ -68,9 +68,21 @@ Game::Game() {
     animationTimer = 0.0f;
     currentFrame = 0; 
 
+    //5.1.Cargar Graficos de FUEGO
+    //5.1.1.Cargar la imagen de fuego 
+    sf::Image heatblastImage;
+    if(!heatblastImage.loadFromFile("assets/images/Fuego.png")){
+        std::cerr << "ERROR cargando imagen Fuego.png" << std::endl;
+    }
+    //5.1.2.Quitar el fondo Magenta 
+    heatblastImage.createMaskFromColor(sf::Color(255, 0, 255));
+    //5.1.3. Pasar la imagen limpia a la textura
+    heatblastTexture.loadFromImage(heatblastImage);
+    //5.1.4.Inicializar estado(Empezar sin transformacion)
+    isHeatblast = false;
     //6.Crear el enemigo(Dron)
     b2BodyDef enemyDef = b2DefaultBodyDef();
-    enemyDef.type = b2_dynamicBody;//Hacer que se mueva
+    enemyDef.type = b2_kinematicBody;//Hacer que se mueva pero nada lo empuja
     enemyDef.position = {600.0f, 400.0f};
     //Bloqueamos rotación para que no ruede
     enemyDef.fixedRotation = true;
@@ -133,26 +145,60 @@ void Game::processEvents() {
                     b2Body_SetLinearVelocity(benBodyId, velocity);
                 }
             }
+
+                //Transformacion (Nuevo)
+                if(event.key.code == sf::Keyboard::Z){
+                    //Cambiamos el estado(Si era falso, ahora verdadero y viceversa)
+                    isHeatblast = !isHeatblast;
+                    
+                    if(isHeatblast){
+                        std::cout << "¡FUEGO!" << std::endl;
+                        //1.Cambiar la imagen a la de fuego
+                        benSprite.setTexture(heatblastTexture);
+                        //2.Usar coordenadas de la imagen de fuego (X=9, Y=11, Ancho=35, Alto=53)
+                        benSprite.setTextureRect(sf::IntRect(9, 11, 35, 53));
+                        //3.Ajustar el centro (Mitad de 35 y 53)
+                        benSprite.setScale(2.2f, 2.2f);
+                        benSprite.setOrigin(17.5f, 26.5f);
+                    }else{
+                        //Volver a Ben
+                        std::cout << "Destransformado..." << std::endl;
+                        //1.Volver a la imagen de Ben
+                        benSprite.setTexture(benTexture);
+                        //2.Coordenadas originales de Ben quieto
+                        benSprite.setTextureRect(sf::IntRect(8, 23, 51, 84));
+                        //3.Centro original de Ben
+                        benSprite.setOrigin(25.5f, 42.0f);
+                        //Regresar la escala de Ben a la normal
+                        benSprite.setScale(1.5f, 1.5f);
+                    }
+                }
+            }
         }
     }
-}
 
 void Game::update() {
   //1.Obtener la velocidad física de ben 
   b2Vec2 velocity = b2Body_GetLinearVelocity(benBodyId);
   bool isMoving = false; //Aplicamos bandera para saber si corremos
 
+  //Definimos que tamaño debemos tener
+  float currentScale = 1.5f; //Tamaño normal de ben
+  if(isHeatblast){
+    currentScale = 2.2f; //Tamaño para fuego grande
+  }
+
   //2.Controles
   //Vamo a la derecha
   if(sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
     velocity.x = 200.0f; //Asi aplicamos que se mueva la derecha en el eje x
-    benSprite.setScale(1.5f, 1.5f);
+    benSprite.setScale(currentScale, currentScale);
     isMoving = true; //Aqui aplica que ben se esta moviendo
   }
   //Vamo a la Izquierda
   else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
     velocity.x = -200.0f;//Aplicamos que se mueva a la izquierda en el eje x
-    benSprite.setScale(-1.5f, 1.5f);
+    benSprite.setScale(-currentScale, currentScale);
     isMoving = true; // Se esta moviendo a la izquierda :D
   }
   //QUIETOO
@@ -161,7 +207,36 @@ void Game::update() {
     isMoving = false;
   }
   //3.Sistema de Animación
+  //Si somos Fuego, No hacemos nada en este, se queda con la pose que pusimosal presionar Z)
+  if(isHeatblast){
+    if(isMoving){
+        //A. Cronometro
+        animationTimer += 1.0f / 60.0f;
+        if(animationTimer >= 0.1f){
+            animationTimer = 0.0f;
+            currentFrame++;
+            if(currentFrame >= 6) currentFrame = 0;
+        }
+        //B.Listas Maestras
+        int fuegoX[] = {16, 67, 106, 155, 210, 250};
+        int fuegoW[] = {25, 20, 34, 32, 21, 36};
+        //C.Obtener cuadro actual 
+        int currentX = fuegoX[currentFrame];
+        int currentW = fuegoW[currentFrame];
+        //D.Aplicar recorte (Con Y=82)
+        benSprite.setTextureRect(sf::IntRect(currentX, 82, currentW, 55));
+        //E.Centrado Dinamico
+        benSprite.setOrigin(currentW / 2.0f, 26.5f);
+    }
+    else{
+        //QUIETO
+        benSprite.setTextureRect(sf::IntRect(9, 11, 35, 53));
+        benSprite.setOrigin(17.5f, 26.5f);
+    }
+  }
+  else{
   if(isMoving){
+
     //3.1.Avanzar el cronómetro(Se suma el tiempo que paso, aproximado de 1/60seg)
     animationTimer += 1.0f / 60.0f;
 
@@ -197,6 +272,7 @@ void Game::update() {
     benSprite.setTextureRect(sf::IntRect(8, 23, 51, 84));
     benSprite.setOrigin(25.5f, 42.0f);
   }
+}
   //4.Aplicar las fisicas y sincronizamos
   b2Body_SetLinearVelocity(benBodyId, velocity);
   b2World_Step(worldId, 1.0f / 60.0f, 4);
