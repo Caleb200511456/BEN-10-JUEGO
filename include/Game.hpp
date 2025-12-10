@@ -59,4 +59,9 @@ private:
     //Reloj del sistema
     sf::Clock dtClock; //Cronometro
     float shootCooldown; //Tiempo de espera entre disparos
+    int maxHealth; //Vida maxima
+    int currentHealth;//Vida actual
+    float damageTimer; //Tiempo de invencibilidad
+    sf::RectangleShape healthBar; //La barra verde
+    sf::RectangleShape healthBarBack; //Fondo gris/rojo de la barra
 };

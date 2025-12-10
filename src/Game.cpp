@@ -116,6 +116,18 @@ Game::Game() {
 
     shootCooldown = 0.0f; //Listo para disparar
 
+    //CONFIGURAR VIDA
+    maxHealth = 100;
+    currentHealth = 100; //Empezamos con toda la vida
+    damageTimer = 0.0f; //Empezamos con vulnerabilidad
+    //1.Fondo de la barra(Gris oscuro)
+    healthBarBack.setSize(sf::Vector2f(200.0f, 20.0f)); //200 de largo
+    healthBarBack.setFillColor(sf::Color(50, 50, 50)); //Gris
+    healthBarBack.setPosition(20.0f, 20.0f); //Esquina arriba izquierda
+    //2.Barra de Vida(Verde Omnitrix)
+    healthBar.setSize(sf::Vector2f(200.0f, 20.0f));
+    healthBar.setFillColor(sf::Color(0, 255, 0)); //Verde
+    healthBar.setPosition(20.0f, 20.0f); //En el mismo lugar
 }
 
 Game::~Game() {
@@ -200,6 +212,16 @@ void Game::processEvents() {
                 //Recalentar el arma
                 shootCooldown = 0.4f; //Esperar 0.4 seg para el siguiente tiro
                 std::cout << "¡Fiuuu! (Disparo)" << std::endl;
+                }
+                //Truco de prueba: daño infligido
+                if(event.key.code == sf::Keyboard::K){
+                    currentHealth -= 10;
+                    if(currentHealth < 10) currentHealth = 0;
+                    //Actualizar tamaño de barra
+                    //(vida actual / vida maxima) * Ancho original(100)
+                    float percentage = (float)currentHealth / (float)maxHealth;
+                    healthBar.setSize(sf::Vector2f(200.0f * percentage, 20.0f));
+                    std:: cout << "Vida:" << currentHealth << std::endl;
                 }
             }
         }
@@ -350,20 +372,41 @@ void Game::update() {
     b2Vec2 enemyVel = b2Body_GetLinearVelocity(enemyBodyId);
     enemyVel.x = enemySpeed; 
     b2Body_SetLinearVelocity(enemyBodyId, enemyVel);
-
-    // Colision(hacer que ben muera al tocar el dron)
-    // Preguntamos: ¿El rctangulo de Ben se cruza con el del Enemigo?
-    if(benSprite.getGlobalBounds().intersects(enemyShape.getGlobalBounds())){
-    
-        // GAME OVER PARA BEN
-        // 1.Teletransportar al inicio (400, -100) de pie (1.0, 0.0) significa (seno,coseno)
-        b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0, 0.0f});
-
-        // 2.Quitamos velocidad(franar)
-        b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
-
-        std::cout << "¡Ben ha sido capturado!" << std::endl;
+    //ACTUALIZACION TEMPORIZADOR DE DAÑO
+    if (damageTimer > 0.0f){
+        damageTimer -= dt; //Restamos tiempo
     }
+    //COLISION DE BEN VS DRON
+    if(benSprite.getGlobalBounds().intersects(enemyShape.getGlobalBounds())){
+        //Solo recibimos daño si el timer ya se acabó
+        if(damageTimer <= 0.0f){
+        //1.Bajar vida
+        currentHealth -= 25; //Perdio vida Ben
+        std::cout << "¡GOLPE! Vida restante" << currentHealth << std::endl;
+        //2.Activar invencibilidad (2seg)
+        damageTimer = 2.0f;
+        //3.Empujamos a ben hacia atrás y arriba para alejarlo del peligro
+        b2Vec2 knockback = {-500.0, -300.0}; //Izquierda y arriba
+        if (benSprite.getScale().x < 0) knockback.x = 500.0f; //Si mira a la izq. empujamos a la derecha
+        b2Body_SetLinearVelocity(benBodyId, knockback);
+        //4.Actualizar la barra visualmente
+        float percentage = (float)currentHealth / (float)maxHealth;
+        //Asegurar que no sea negativo el ancho
+        if(percentage < 0) percentage = 0;
+        healthBar.setSize(sf::Vector2f(200.0f * percentage, 20.0f));
+        //5.MURIO?
+        if (currentHealth <= 0){
+            std::cout << "¿BEN HA CAIDO! GAME OVER" << std::endl;
+            //AHORA REINICIAR EL NIVEL
+            b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0f, 0.0f});
+            b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
+            //Restaurar vida completa
+            currentHealth = 100;
+            healthBar.setSize(sf::Vector2f(200.0f, 20.0f));
+            damageTimer = 0.0f;
+        }
+    }
+}
 
     // VICTORIA: CUANDO BEN TOCA LA META
     if(benSprite.getGlobalBounds().intersects(goalShape.getGlobalBounds())){
@@ -404,6 +447,13 @@ void Game::update() {
     // BORRAR BALAS VIEJAS
     auto iterator = std::remove_if(projectiles.begin(), projectiles.end(), [](const Projectile& p){ return p.destroy;});
     projectiles.erase(iterator, projectiles.end());
+
+    //CAMBIO DE COLOR DE BARRA
+    if (damageTimer > 0.0f){
+        healthBar.setFillColor(sf::Color::Red); //En peligro/ invencible
+    } else{
+        healthBar.setFillColor(sf::Color::Green); //Sano/ Listo
+    }
 }
 
 void Game::render(){
@@ -433,6 +483,16 @@ void Game::render(){
 
     // 4. Ben (Lo dibujamos al final para que salga encima de todo)
     window.draw(benSprite);
+    //Dibujar Interfaz (HUD)
+    //Guardar la vista del juego (Camara de Ben)
+    sf::View gameView = window.getView();
+    //2.Cambiar a la vista por defecto (pegada a la pantalla 0,0)
+    window.setView(window.getDefaultView());
+    //3.Dibujar la Interfaz(Barra de vida)
+    window.draw(healthBarBack); //Fondo Gris
+    window.draw(healthBar); //Barra verde
+    //4.Restaurar la vista del juego(Para que la fisica no se rompa en el siguiente frame)
+    window.setView(gameView);
 
     // --- MOSTRAR PANTALLA (SOLO UNA VEZ AL FINAL) ---
     window.display(); 
