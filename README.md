@@ -1,5 +1,5 @@
 # BEN-10-JUEGO
-hola esto es una prueba de conexion.
+Hola esto es una prueba de conexion.
 // ... (Debajo de las plataformas viejas)
 
     // REFERENCIAS VISUALES PARA EL CAMINO
