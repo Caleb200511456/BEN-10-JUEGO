@@ -44,12 +44,22 @@ private:
     
     //Suelo
     std::vector<sf::RectangleShape> platformShapes; //Para aplicar dibujos para el escenario
-    b2BodyId enemyBodyId; //El cuerpo fisico del enemigo
-    
-    //Enemigo
-    sf::RectangleShape enemyShape; //El dibujo del enemigo(Cubo rojo)
-    float enemySpeed; //Velocidad del enemigo
+   
+    //Variables del enemigo
+    struct Enemy {
+        b2BodyId bodyId;       // Su cuerpo físico
+        sf::RectangleShape shape; // Su dibujo
+        float speed;           // Su velocidad actual
+        float startX;          // Donde nació (para saber patrullar alrededor)
+        float patrolRange;     // Qué tan lejos puede caminar
+        bool destroy;          // Si está muerto
+    };
 
+    std::vector<Enemy> enemies; // ¡La lista de todos los drones!
+
+    // Función para crear enemigos fácilmente
+    void spawnEnemy(float x, float y, float range);
+     
     //META DEL NIVEL 
     sf::CircleShape goalShape; //Esfera de energia 
 
