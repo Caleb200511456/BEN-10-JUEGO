@@ -115,6 +115,36 @@ Game::Game() {
     energyBar.setSize(sf::Vector2f(200.0f, 10.0f));
     energyBar.setFillColor(sf::Color::Yellow); 
     energyBar.setPosition(20.0f, 45.0f);
+    
+    //Cargar audio
+    //1.Musica 
+    if(bgMusic.openFromFile("assets/music/music.mp3")){
+        bgMusic.setLoop(true); //Repetir siempre
+        bgMusic.setVolume(30); //Volumen moderado
+        bgMusic.play(); //Play a la musica 
+    }else{
+        std::cout << "No se encontro music.mp3" << std::endl;
+    }
+    //2.Efecto de salto
+    if(jumpBuffer.loadFromFile("assets/music/jump.wav")){
+        jumpSound.setBuffer(jumpBuffer);
+        jumpSound.setVolume(50);
+    }
+    //3.Efecto de disparo
+    if(shootBuffer.loadFromFile("assets/music/shoot.wav")){
+        shootSound.setBuffer(shootBuffer);
+        shootSound.setVolume(60);
+    }
+    //4.Transformación
+    if(transformBuffer.loadFromFile("assets/music/transform.wav")){
+        transformSound.setBuffer(transformBuffer);
+        transformSound.setVolume(70);
+    }
+    //5.Efecto golpe
+    if(hitBuffer.loadFromFile("assets/music/hit.wav")){
+        hitSound.setBuffer(hitBuffer);
+        hitSound.setVolume(50);
+    }
 }
 
 Game::~Game() {
@@ -136,30 +166,40 @@ void Game::processEvents() {
             window.close();
         
         if(event.type == sf::Event::KeyPressed){
+            
+            //Salto
             if(event.key.code == sf::Keyboard::Space){
-                // Salto
                 b2Vec2 velocity = b2Body_GetLinearVelocity(benBodyId);
                 if (std::abs(velocity.y)<0.5){
                     velocity.y = -900.0f; 
                     b2Body_SetLinearVelocity(benBodyId, velocity);
+                    
+                    // ¡SONIDO DE SALTO!
+                    jumpSound.play();
                 }
             }
 
-            // Transformacion
+            // --- TRANSFORMACIÓN ---
             if(event.key.code == sf::Keyboard::Z){
                 if (!isHeatblast && currentEnergy < 10.0f) {
                     std::cout << "¡Sin energía!" << std::endl;
                 }
                 else {
                     isHeatblast = !isHeatblast;
+                    
+                    // ¡SONIDO DE TRANSFORMACIÓN!
+                    transformSound.play();
+
                     if(isHeatblast){
                         // Fuego
+                        std::cout << "¡FUEGO!" << std::endl;
                         benSprite.setTexture(heatblastTexture);
                         benSprite.setTextureRect(sf::IntRect(9, 11, 35, 53));
                         benSprite.setScale(2.2f, 2.2f);
                         benSprite.setOrigin(17.5f, 26.5f);
                     }else{
                         // Ben
+                        std::cout << "Destransformado..." << std::endl;
                         benSprite.setTexture(benTexture);
                         benSprite.setTextureRect(sf::IntRect(8, 23, 51, 84));
                         benSprite.setOrigin(25.5f, 42.0f);
@@ -168,8 +208,12 @@ void Game::processEvents() {
                 }
             }
             
-            // DISPARO
+            // --- DISPARO ---
             if(event.key.code == sf::Keyboard::X && isHeatblast && shootCooldown <= 0.0f){
+                
+                // ¡SONIDO DE DISPARO!
+                shootSound.play();
+                
                 Projectile newProj;
                 newProj.shape.setRadius(10.0f);
                 newProj.shape.setFillColor(sf::Color(255, 165, 0)); 
@@ -297,10 +341,7 @@ void Game::update() {
         b2Body_SetTransform(benBodyId, {100.0f, 450.0f}, {1.0f, 0.0}); // Reinicio al principio
         b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
     }
-
-    // ------------------------------------------
-    // --- ACTUALIZAR EJÉRCITO DE ENEMIGOS (NUEVO) ---
-    // ------------------------------------------
+    //EJERCITO DE ENEMIGOS
     for (size_t i = 0; i < enemies.size(); i++) {
         
         // 1. Sincronizar dibujo
@@ -325,6 +366,8 @@ void Game::update() {
         // 3. COLISIÓN CON BEN (DAÑO)
         if(benSprite.getGlobalBounds().intersects(enemies[i].shape.getGlobalBounds())){
              if(damageTimer <= 0.0f){
+                //Sonido de golpe
+                hitSound.play();
                 currentHealth -= 25;
                 std::cout << "¡GOLPE DE DRON! Vida: " << currentHealth << std::endl;
                 damageTimer = 2.0f; 

@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp> 
 #include <box2d/box2d.h>
 #include <vector> 
 
@@ -80,4 +81,20 @@ private:
     float currentEnergy; //Energia Actual
     sf::RectangleShape energyBar; //La barra amarilla
     sf::RectangleShape energyBarBack; //El fondo de la barra
+
+    //Sistema de audio
+    sf::Music bgMusic; //Musica larga
+    //Efectos cortos
+    sf::SoundBuffer jumpBuffer;
+    sf::Sound jumpSound;
+
+    sf::SoundBuffer shootBuffer;
+    sf::Sound shootSound;
+
+    sf::SoundBuffer transformBuffer;
+    sf::Sound transformSound;
+
+    sf::SoundBuffer hitBuffer;
+    sf::Sound hitSound; //Para cuando me peguen 
+
 };
