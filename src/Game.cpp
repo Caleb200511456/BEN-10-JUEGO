@@ -14,24 +14,18 @@ Game::Game() {
     worldId = b2CreateWorld(&worldDef);
 
     // 3. Diseñamos el nivel
-    //3.1. El suelo Principal (Que sea Grande y este por debajo)
+    // 3.1. El suelo Principal (Que sea Grande y este por debajo)
     createPlatform(400.0f, 580.0f, 800.0f, 40.0f);
 
-    //3.2.Plataformas flotantes(Para hacer PARKOUUUR :D)
-    createPlatform(600.0f, 450.0f, 200.0f, 20.0f); //Derecha baja
-    createPlatform(200.0f, 350.0f, 200.0f, 20.0f); //Izquierda al medio
-    createPlatform(500.0f, 200.0f, 150.0f, 20.0f); //Arriba centro
-
-    //3.3.Muro alto a la izquierda para que no se salga el ben
-    //createPlatform(-10.0f, 300.0f, 20.0f, 600.0f);
-    //3.4.Un muro a la derecha
-    //createPlatform(810.0f, 300.0f, 20.0f, 600.0f);
-    
+    // 3.2. Plataformas flotantes (Para hacer PARKOUUUR :D)
+    createPlatform(600.0f, 450.0f, 200.0f, 20.0f); // Derecha baja
+    createPlatform(200.0f, 350.0f, 200.0f, 20.0f); // Izquierda al medio
+    createPlatform(500.0f, 200.0f, 150.0f, 20.0f); // Arriba centro
 
     // 4. Crear Cuerpo Físico de Ben (La caja invisible que choca)
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
-    bodyDef.position = {400.0f, -100.0f}; //Aseguramos que inicie en el aire y que caiga a cierta altura
+    bodyDef.position = {400.0f, -100.0f}; // Aseguramos que inicie en el aire y que caiga a cierta altura
     benBodyId = b2CreateBody(worldId, &bodyDef);
     b2Body_SetFixedRotation(benBodyId, true);
 
@@ -47,9 +41,9 @@ Game::Game() {
     if (!benImage.loadFromFile("assets/images/ben10.png")) {
         std::cerr << "ERROR cargando imagen ben10.png" << std::endl;
     }
-    //Especificar que lo que sea magenta lo ponga transparente
+    // Especificar que lo que sea magenta lo ponga transparente
     benImage.createMaskFromColor(sf::Color::Magenta);
-    //Cargamos la textura de la imagen ya actualizada papa
+    // Cargamos la textura de la imagen ya actualizada papa
     benTexture.loadFromImage(benImage);
 
     benSprite.setTexture(benTexture);
@@ -68,66 +62,85 @@ Game::Game() {
     animationTimer = 0.0f;
     currentFrame = 0; 
 
-    //5.1.Cargar Graficos de FUEGO
-    //5.1.1.Cargar la imagen de fuego 
+    // 5.1. Cargar Graficos de FUEGO
+    // 5.1.1. Cargar la imagen de fuego 
     sf::Image heatblastImage;
     if(!heatblastImage.loadFromFile("assets/images/Fuego.png")){
         std::cerr << "ERROR cargando imagen Fuego.png" << std::endl;
     }
-    //5.1.2.Quitar el fondo Magenta 
+    // 5.1.2. Quitar el fondo Magenta 
     heatblastImage.createMaskFromColor(sf::Color(255, 0, 255));
-    //5.1.3. Pasar la imagen limpia a la textura
+    // 5.1.3. Pasar la imagen limpia a la textura
     heatblastTexture.loadFromImage(heatblastImage);
-    //5.1.4.Inicializar estado(Empezar sin transformacion)
+    // 5.1.4. Inicializar estado (Empezar sin transformacion)
     isHeatblast = false;
-    //6.Crear el enemigo(Dron)
+    
+    // 6. Crear el enemigo (Dron)
     b2BodyDef enemyDef = b2DefaultBodyDef();
-    enemyDef.type = b2_kinematicBody;//Hacer que se mueva pero nada lo empuja
+    enemyDef.type = b2_kinematicBody; // Hacer que se mueva pero nada lo empuja
     enemyDef.position = {600.0f, 400.0f};
-    //Bloqueamos rotación para que no ruede
+    // Bloqueamos rotación para que no ruede
     enemyDef.fixedRotation = true;
     enemyBodyId = b2CreateBody(worldId, &enemyDef);
 
-    //Cramos forma fisica de la caja
+    // Cramos forma fisica de la caja
     b2Polygon enemyBox = b2MakeBox(15.0f, 15.0f); 
     b2ShapeDef enemyShapeDef = b2DefaultShapeDef();
     enemyShapeDef.density = 1.0f;
     b2CreatePolygonShape(enemyBodyId, &enemyShapeDef, &enemyBox);
 
-    //Forma Gráfica (Cubito rojo)
+    // Forma Gráfica (Cubito rojo)
     enemyShape.setSize(sf::Vector2f(30.0f, 30.0f));
     enemyShape.setOrigin(15.0f, 15.0f);
     enemyShape.setFillColor(sf::Color::Red); 
 
-    //Velocidad Inicial
-    enemySpeed = 100.0f; //Se mueva a la derecha
+    // Velocidad Inicial
+    enemySpeed = 100.0f; // Se mueva a la derecha
 
-    //7.Crear la META(TARJETA SUMO)
-    goalShape.setRadius(20.0f); //Tamaño de la esfera
-    goalShape.setFillColor(sf::Color::Yellow);//Amarillo para la tarjeta de Sumo
+    // 7. Crear la META (TARJETA SUMO)
+    goalShape.setRadius(20.0f); // Tamaño de la esfera
+    goalShape.setFillColor(sf::Color::Yellow); // Amarillo para la tarjeta de Sumo
     goalShape.setOutlineThickness(2.0f);
     goalShape.setOutlineColor(sf::Color::White);
 
-    //Centrar el punto de origen
+    // Centrar el punto de origen
     goalShape.setOrigin(20.0f, 20.0f);
 
-    //Posicion: En la plataforma floatante del centro-arriba
+    // Posicion: En la plataforma floatante del centro-arriba
     goalShape.setPosition(500.0f,150.0f);
 
-    shootCooldown = 0.0f; //Listo para disparar
+    shootCooldown = 0.0f; // Listo para disparar
 
-    //CONFIGURAR VIDA
+    // CONFIGURAR VIDA
     maxHealth = 100;
-    currentHealth = 100; //Empezamos con toda la vida
-    damageTimer = 0.0f; //Empezamos con vulnerabilidad
-    //1.Fondo de la barra(Gris oscuro)
-    healthBarBack.setSize(sf::Vector2f(200.0f, 20.0f)); //200 de largo
-    healthBarBack.setFillColor(sf::Color(50, 50, 50)); //Gris
-    healthBarBack.setPosition(20.0f, 20.0f); //Esquina arriba izquierda
-    //2.Barra de Vida(Verde Omnitrix)
+    currentHealth = 100; // Empezamos con toda la vida
+    damageTimer = 0.0f; // Empezamos con vulnerabilidad
+    
+    // 1. Fondo de la barra (Gris oscuro)
+    healthBarBack.setSize(sf::Vector2f(200.0f, 20.0f)); // 200 de largo
+    healthBarBack.setFillColor(sf::Color(50, 50, 50)); // Gris
+    healthBarBack.setPosition(20.0f, 20.0f); // Esquina arriba izquierda
+    
+    // 2. Barra de Vida (Verde Omnitrix)
     healthBar.setSize(sf::Vector2f(200.0f, 20.0f));
-    healthBar.setFillColor(sf::Color(0, 255, 0)); //Verde
-    healthBar.setPosition(20.0f, 20.0f); //En el mismo lugar
+    healthBar.setFillColor(sf::Color(0, 255, 0)); // Verde
+    healthBar.setPosition(20.0f, 20.0f); // En el mismo lugar
+
+    // ------------------------------------
+    // --- CONFIGURAR ENERGÍA (NUEVO) ---
+    // ------------------------------------
+    maxEnergy = 100.0f; 
+    currentEnergy = 100.0f; // Bateria llena al inicio
+    
+    // 1. Fondo de la barra de energía
+    energyBarBack.setSize(sf::Vector2f(200.0f, 10.0f)); // Un poco mas delgada
+    energyBarBack.setFillColor(sf::Color(50, 50, 50));
+    energyBarBack.setPosition(20.0f, 45.0f); // Debajo de la vida
+    
+    // 2. Barra Amarilla
+    energyBar.setSize(sf::Vector2f(200.0f, 10.0f));
+    energyBar.setFillColor(sf::Color::Yellow); // BARRA AMARILLA
+    energyBar.setPosition(20.0f, 45.0f);
 }
 
 Game::~Game() {
@@ -150,82 +163,94 @@ void Game::processEvents() {
         
         if(event.type == sf::Event::KeyPressed){
             if(event.key.code == sf::Keyboard::Space){
-                //Obtenemos aqui la velocidad solo para revisar si esta ben en el suelo
+                // Obtenemos aqui la velocidad solo para revisar si esta ben en el suelo
                 b2Vec2 velocity = b2Body_GetLinearVelocity(benBodyId);
 
-                //Si la velocidad vertical es baja (esta en el suelo o casi)
+                // Si la velocidad vertical es baja (esta en el suelo o casi)
                 if (std::abs(velocity.y)<0.5){
-                    velocity.y = -900.0f; //Impulso del salto
+                    velocity.y = -900.0f; // Impulso del salto
                     b2Body_SetLinearVelocity(benBodyId, velocity);
                 }
             }
 
-                //Transformacion (Nuevo)
-                if(event.key.code == sf::Keyboard::Z){
-                    //Cambiamos el estado(Si era falso, ahora verdadero y viceversa)
+            // Transformacion (Con bloqueo de energía)
+            if(event.key.code == sf::Keyboard::Z){
+                
+                // NUEVO: Si quiero transformarme PERO no tengo pila
+                if (!isHeatblast && currentEnergy < 10.0f) {
+                    std::cout << "¡Sin energía! Espera a que recargue." << std::endl;
+                }
+                else {
+                    // Cambiamos el estado (Si era falso, ahora verdadero y viceversa)
                     isHeatblast = !isHeatblast;
                     
                     if(isHeatblast){
                         std::cout << "¡FUEGO!" << std::endl;
-                        //1.Cambiar la imagen a la de fuego
+                        // 1. Cambiar la imagen a la de fuego
                         benSprite.setTexture(heatblastTexture);
-                        //2.Usar coordenadas de la imagen de fuego (X=9, Y=11, Ancho=35, Alto=53)
+                        // 2. Usar coordenadas de la imagen de fuego (X=9, Y=11, Ancho=35, Alto=53)
                         benSprite.setTextureRect(sf::IntRect(9, 11, 35, 53));
-                        //3.Ajustar el centro (Mitad de 35 y 53)
+                        // 3. Ajustar el centro (Mitad de 35 y 53)
                         benSprite.setScale(2.2f, 2.2f);
                         benSprite.setOrigin(17.5f, 26.5f);
                     }else{
-                        //Volver a Ben
+                        // Volver a Ben
                         std::cout << "Destransformado..." << std::endl;
-                        //1.Volver a la imagen de Ben
+                        // 1. Volver a la imagen de Ben
                         benSprite.setTexture(benTexture);
-                        //2.Coordenadas originales de Ben quieto
+                        // 2. Coordenadas originales de Ben quieto
                         benSprite.setTextureRect(sf::IntRect(8, 23, 51, 84));
-                        //3.Centro original de Ben
+                        // 3. Centro original de Ben
                         benSprite.setOrigin(25.5f, 42.0f);
-                        //Regresar la escala de Ben a la normal
+                        // Regresar la escala de Ben a la normal
                         benSprite.setScale(1.5f, 1.5f);
                     }
                 }
-                //DISPARO
-                if(event.key.code == sf::Keyboard::X && isHeatblast && shootCooldown <= 0.0f){
-                    Projectile newProj;
+            }
+            
+            // DISPARO
+            if(event.key.code == sf::Keyboard::X && isHeatblast && shootCooldown <= 0.0f){
+                Projectile newProj;
                 
-                //1.Apariencia
+                // 1. Apariencia
                 newProj.shape.setRadius(10.0f);
-                newProj.shape.setFillColor(sf::Color(255, 165, 0)); //Naranja de fuego
-                newProj.shape.setOrigin(10.0f, 10.0f); //Ajuste de centro
-                //2.Posicion de salida(Desde el centro de fuego)
+                newProj.shape.setFillColor(sf::Color(255, 165, 0)); // Naranja de fuego
+                newProj.shape.setOrigin(10.0f, 10.0f); // Ajuste de centro
+                
+                // 2. Posicion de salida (Desde el centro de fuego)
                 sf::Vector2f benPos = benSprite.getPosition();
-                //Ajustamos un poco la altura para que salga de las manos/pecho
+                // Ajustamos un poco la altura para que salga de las manos/pecho
                 newProj.shape.setPosition(benPos.x, benPos.y - 15.0f);
-                //3.Direccion
+                
+                // 3. Direccion
                 if(benSprite.getScale().x > 0){
-                    newProj.speed = 600.0f; //Disparo a la derecha
+                    newProj.speed = 600.0f; // Disparo a la derecha
                 }else{
-                    newProj.speed = -600.0f; //Disparo a la izquiersa
+                    newProj.speed = -600.0f; // Disparo a la izquiersa
                 }
                 newProj.destroy = false;
                 newProj.lifetime = 0.0f; 
-                //4.Agregar al cargador
+                
+                // 4. Agregar al cargador
                 projectiles.push_back(newProj);
-                //Recalentar el arma
-                shootCooldown = 0.4f; //Esperar 0.4 seg para el siguiente tiro
+                // Recalentar el arma
+                shootCooldown = 0.4f; // Esperar 0.4 seg para el siguiente tiro
                 std::cout << "¡Fiuuu! (Disparo)" << std::endl;
-                }
-                //Truco de prueba: daño infligido
-                if(event.key.code == sf::Keyboard::K){
-                    currentHealth -= 10;
-                    if(currentHealth < 10) currentHealth = 0;
-                    //Actualizar tamaño de barra
-                    //(vida actual / vida maxima) * Ancho original(100)
-                    float percentage = (float)currentHealth / (float)maxHealth;
-                    healthBar.setSize(sf::Vector2f(200.0f * percentage, 20.0f));
-                    std:: cout << "Vida:" << currentHealth << std::endl;
-                }
+            }
+            
+            // Truco de prueba: daño infligido
+            if(event.key.code == sf::Keyboard::K){
+                currentHealth -= 10;
+                if(currentHealth < 0) currentHealth = 0; // Corregí < 10 a < 0
+                // Actualizar tamaño de barra
+                // (vida actual / vida maxima) * Ancho original(100)
+                float percentage = (float)currentHealth / (float)maxHealth;
+                healthBar.setSize(sf::Vector2f(200.0f * percentage, 20.0f));
+                std::cout << "Vida:" << currentHealth << std::endl;
             }
         }
     }
+}
 
 void Game::update() {
     // Esto mide el tiempo real entre "fotos". Arregla la velocidad loca.
@@ -260,14 +285,50 @@ void Game::update() {
         isMoving = false;
     }
 
+    // ------------------------------------
+    // --- SISTEMA DE ENERGÍA OMNITRIX (NUEVO) ---
+    // ------------------------------------
+    
+    // CASO A: SI ERES FUEGO (Gastar Energía)
+    if (isHeatblast) {
+        // Restamos energía (15 unidades por segundo = dura unos 6-7 segundos)
+        currentEnergy -= 15.0f * dt;
+
+        // ¿SE ACABÓ LA PILA?
+        if (currentEnergy <= 0.0f) {
+            currentEnergy = 0.0f;
+            
+            // ¡DESTRANSFORMACIÓN FORZADA! ⚡
+            isHeatblast = false;
+            std::cout << "¡BATERÍA AGOTADA! volviendo a ser Ben..." << std::endl;
+
+            // Restablecer físicas y gráficos de Ben
+            benSprite.setTexture(benTexture);
+            benSprite.setTextureRect(sf::IntRect(8, 23, 51, 84));
+            benSprite.setOrigin(25.5f, 42.0f);
+            benSprite.setScale(1.5f, 1.5f); // Volver a tamaño normal
+        }
+    } 
+    // CASO B: SI ERES BEN (Recargar Energía)
+    else {
+        // Recuperamos energía lento (5 unidades por segundo)
+        currentEnergy += 5.0f * dt;
+        
+        // No pasar del máximo
+        if (currentEnergy > maxEnergy) {
+            currentEnergy = maxEnergy;
+        }
+    }
+
+    // ACTUALIZAR EL TAMAÑO VISUAL DE LA BARRA DE ENERGÍA
+    float energyPct = currentEnergy / maxEnergy;
+    energyBar.setSize(sf::Vector2f(200.0f * energyPct, 10.0f));
+
     // 3. Sistema de Animación
-    // Si somos Fuego, No hacemos nada en este, se queda con la pose que pusimos al presionar Z)
     if(isHeatblast){
         if(isMoving){
             // A. Cronometro
-            // CAMBIO: Usamos 'dt' en vez de 1.0/60.0f para suavidad
             animationTimer += dt; 
-            
             if(animationTimer >= 0.1f){
                 animationTimer = 0.0f;
                 currentFrame++;
@@ -296,38 +357,23 @@ void Game::update() {
     else{ 
         // Si somos BEN
         if(isMoving){
-            // 3.1. Avanzar el cronómetro (Se suma el tiempo real dt)
-            // CAMBIO: Usamos 'dt' aquí también
+            // 3.1. Avanzar el cronómetro
             animationTimer += dt; 
-
             // 3.2. Aplicar el cambio de dibujo
             if(animationTimer >= 0.1f){
-                animationTimer = 0.0f; // Reiniciamos el cronometro
-                currentFrame++; // Siguiente dibujo
-            
-                // Si llegamos al dibujo 6, regresar al primer dibujo(Loop)
-                if(currentFrame >= 6){
-                    currentFrame = 0;
-                }
+                animationTimer = 0.0f; 
+                currentFrame++; 
+                if(currentFrame >= 6) currentFrame = 0;
             }
-            // 3.3. Calcular el recorte de correr obtenidos en la imagen
-            // Lista exacta de tus coordenadas X:
+            // 3.3. Calcular el recorte
             int walkingFramesX[] = {17, 78, 137, 181, 238, 295};
-
-            // Usamos el 'currentFrame' para elegir el número de la lista
             int frameX = walkingFramesX[currentFrame]; 
-
-            // Actualizamos el recorte usando la X exacta de la lista
-            // (Y=382, Ancho=47, Alto=79 según tus medidas anteriores)
             benSprite.setTextureRect(sf::IntRect(frameX, 382, 47, 79));
-
-            // Ajustamos el origen para el ancho de 47
             benSprite.setOrigin(23.5f, 39.5f);
         }
         else{
-            // 3.4. Si esta quieto volver al dibujo original 
-            // Datos del dibujo original: X=8, Y=23, Alto= 51, Largo=84 aprox
-            currentFrame = 0; // Resetear para que al correr empiece en el dibujo 1
+            // 3.4. Si esta quieto
+            currentFrame = 0; 
             benSprite.setTextureRect(sf::IntRect(8, 23, 51, 84));
             benSprite.setOrigin(25.5f, 42.0f);
         }
@@ -344,115 +390,99 @@ void Game::update() {
     // Hacemos la zona de Muerte GAME OVER
     // Si ben cae muy abajo (Y mayor a 800 pixeles)
     if (pos.y > 800.0f) {
-        // 1. Lo regresamos al inicio (400, -100)
-        // El ángulo lo dejamos en 0 (b2Rot_Identity si usas v3, o simplemente 0.0f en la función SetTransform)
-        b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0f, 0.0});// 1.0 es Seno y 0.0 es Coseno asi se movera Ben
-        
-        // 2. Le quitamos la velocidad para que no siga cayendo a toda pastilla
+        b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0f, 0.0});// 1.0 es Seno y 0.0 es Coseno
         b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
     }
 
     // IA DEL ENEMIGO 
-    
-    // 1. Obtener posición actual
     b2Vec2 enemyPos = b2Body_GetPosition(enemyBodyId);
     enemyShape.setPosition(enemyPos.x, enemyPos.y);
 
-    // 2. Lógica de Patrulla
-    // Si llegó al borde DERECHO (680) Y todavía quiere ir a la derecha (> 0)
     if (enemyPos.x > 680.0f && enemySpeed > 0) {
         enemySpeed = -100.0f; // ¡Cambio a Izquierda!
     }
-    // Si llegó al borde IZQUIERDO (520) Y todavía quiere ir a la izquierda (< 0)
     else if (enemyPos.x < 520.0f && enemySpeed < 0) {
         enemySpeed = 100.0f;  // ¡Cambio a Derecha!
     }
 
-    // 3. Aplicar la velocidad decidida
     b2Vec2 enemyVel = b2Body_GetLinearVelocity(enemyBodyId);
     enemyVel.x = enemySpeed; 
     b2Body_SetLinearVelocity(enemyBodyId, enemyVel);
-    //ACTUALIZACION TEMPORIZADOR DE DAÑO
+    
+    // ACTUALIZACION TEMPORIZADOR DE DAÑO
     if (damageTimer > 0.0f){
-        damageTimer -= dt; //Restamos tiempo
+        damageTimer -= dt; // Restamos tiempo
     }
-    //COLISION DE BEN VS DRON
+    // COLISION DE BEN VS DRON
     if(benSprite.getGlobalBounds().intersects(enemyShape.getGlobalBounds())){
-        //Solo recibimos daño si el timer ya se acabó
+        // Solo recibimos daño si el timer ya se acabó
         if(damageTimer <= 0.0f){
-        //1.Bajar vida
-        currentHealth -= 25; //Perdio vida Ben
-        std::cout << "¡GOLPE! Vida restante" << currentHealth << std::endl;
-        //2.Activar invencibilidad (2seg)
-        damageTimer = 2.0f;
-        //3.Empujamos a ben hacia atrás y arriba para alejarlo del peligro
-        b2Vec2 knockback = {-500.0, -300.0}; //Izquierda y arriba
-        if (benSprite.getScale().x < 0) knockback.x = 500.0f; //Si mira a la izq. empujamos a la derecha
-        b2Body_SetLinearVelocity(benBodyId, knockback);
-        //4.Actualizar la barra visualmente
-        float percentage = (float)currentHealth / (float)maxHealth;
-        //Asegurar que no sea negativo el ancho
-        if(percentage < 0) percentage = 0;
-        healthBar.setSize(sf::Vector2f(200.0f * percentage, 20.0f));
-        //5.MURIO?
-        if (currentHealth <= 0){
-            std::cout << "¿BEN HA CAIDO! GAME OVER" << std::endl;
-            //AHORA REINICIAR EL NIVEL
-            b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0f, 0.0f});
-            b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
-            //Restaurar vida completa
-            currentHealth = 100;
-            healthBar.setSize(sf::Vector2f(200.0f, 20.0f));
-            damageTimer = 0.0f;
+            // 1. Bajar vida
+            currentHealth -= 25; // Perdio vida Ben
+            std::cout << "¡GOLPE! Vida restante" << currentHealth << std::endl;
+            // 2. Activar invencibilidad (2seg)
+            damageTimer = 2.0f;
+            // 3. Empujamos a ben hacia atrás y arriba para alejarlo del peligro
+            b2Vec2 knockback = {-500.0, -300.0}; // Izquierda y arriba
+            if (benSprite.getScale().x < 0) knockback.x = 500.0f; 
+            b2Body_SetLinearVelocity(benBodyId, knockback);
+            // 4. Actualizar la barra visualmente
+            float percentage = (float)currentHealth / (float)maxHealth;
+            if(percentage < 0) percentage = 0;
+            healthBar.setSize(sf::Vector2f(200.0f * percentage, 20.0f));
+            // 5. MURIO?
+            if (currentHealth <= 0){
+                std::cout << "¿BEN HA CAIDO! GAME OVER" << std::endl;
+                // AHORA REINICIAR EL NIVEL
+                b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0f, 0.0f});
+                b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
+                // Restaurar vida completa
+                currentHealth = 100;
+                healthBar.setSize(sf::Vector2f(200.0f, 20.0f));
+                damageTimer = 0.0f;
+            }
         }
     }
-}
 
     // VICTORIA: CUANDO BEN TOCA LA META
     if(benSprite.getGlobalBounds().intersects(goalShape.getGlobalBounds())){
-        // GANASTEEE
         std::cout << "¡NIVEL COMPLTADO! ERES UN HEROE." << std::endl;
-
-        // PReiniciamos el nivel para vovler a jugar 
-        // Proximamente agraremos nivel 2 (por el momento se queda asi)
         b2Body_SetTransform(benBodyId, {400.0f, -100.0f}, {1.0, 0.0f});
         b2Body_SetLinearVelocity(benBodyId, {0.0f, 0.0f});
     }
+    
     if (shootCooldown > 0.0f){
-        shootCooldown -= dt; //Restamos el tiempo que pasó
+        shootCooldown -= dt; // Restamos el tiempo que pasó
     }
-    //2.Actualización de balas
+    
+    // 2. Actualización de balas
     for(size_t i = 0; i < projectiles.size(); i++){
-        
         // 1. Mover USANDO dt (Tiempo real)
-        // Esto evita que salgan como líneas
         projectiles[i].shape.move(projectiles[i].speed * dt, 0.0f); 
-        //Envejecer la bala
+        // Envejecer la bala
         projectiles[i].lifetime += dt;
-        //¿Murio bala vieja?
+        // ¿Murio bala vieja?
         if (projectiles[i].lifetime > 2.0f){
             projectiles[i].destroy = true;
         }
-        //Colision de bala vs dron
-        //Si la bala toca al enemigo:
+        // Colision de bala vs dron
         if(projectiles[i].shape.getGlobalBounds().intersects(enemyShape.getGlobalBounds())){
-            projectiles[i].destroy = true; //la bala explota
-        //Matar al enemigo 
-        b2Body_SetTransform(enemyBodyId, {-1000.0f, -1000.0f}, {1.0f, 0.0f});
-        enemySpeed = 0; //Para que ya no se mueva
-        
-        std::cout << "¡ENEMIGO ELIMINADO!" << std::endl;
+            projectiles[i].destroy = true; // la bala explota
+            // Matar al enemigo 
+            b2Body_SetTransform(enemyBodyId, {-1000.0f, -1000.0f}, {1.0f, 0.0f});
+            enemySpeed = 0; // Para que ya no se mueva
+            std::cout << "¡ENEMIGO ELIMINADO!" << std::endl;
         }
     }
     // BORRAR BALAS VIEJAS
     auto iterator = std::remove_if(projectiles.begin(), projectiles.end(), [](const Projectile& p){ return p.destroy;});
     projectiles.erase(iterator, projectiles.end());
 
-    //CAMBIO DE COLOR DE BARRA
+    // CAMBIO DE COLOR DE BARRA
     if (damageTimer > 0.0f){
-        healthBar.setFillColor(sf::Color::Red); //En peligro/ invencible
+        healthBar.setFillColor(sf::Color::Red); // En peligro/ invencible
     } else{
-        healthBar.setFillColor(sf::Color::Green); //Sano/ Listo
+        healthBar.setFillColor(sf::Color::Green); // Sano/ Listo
     }
 }
 
@@ -483,43 +513,48 @@ void Game::render(){
 
     // 4. Ben (Lo dibujamos al final para que salga encima de todo)
     window.draw(benSprite);
-    //Dibujar Interfaz (HUD)
-    //Guardar la vista del juego (Camara de Ben)
+    
+    // Dibujar Interfaz (HUD)
+    // Guardar la vista del juego (Camara de Ben)
     sf::View gameView = window.getView();
-    //2.Cambiar a la vista por defecto (pegada a la pantalla 0,0)
+    // 2. Cambiar a la vista por defecto (pegada a la pantalla 0,0)
     window.setView(window.getDefaultView());
-    //3.Dibujar la Interfaz(Barra de vida)
-    window.draw(healthBarBack); //Fondo Gris
-    window.draw(healthBar); //Barra verde
-    //4.Restaurar la vista del juego(Para que la fisica no se rompa en el siguiente frame)
+    
+    // 3. Dibujar la Interfaz
+    window.draw(healthBarBack); // Fondo Gris
+    window.draw(healthBar); // Barra verde
+    
+    // DIBUJAR ENERGÍA (NUEVO)
+    window.draw(energyBarBack);
+    window.draw(energyBar);
+    
+    // 4. Restaurar la vista del juego
     window.setView(gameView);
 
     // --- MOSTRAR PANTALLA (SOLO UNA VEZ AL FINAL) ---
     window.display(); 
 }
 
-//Aplicacion de las plataformas
+// Aplicacion de las plataformas
 void Game::createPlatform(float x, float y, float width, float height){
-//1.Fisicas (Box2D)
-b2BodyDef bodyDef = b2DefaultBodyDef();
-bodyDef.position = {x, y}; //Box2D aplicamos para usar el centro
-b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
+    // 1. Fisicas (Box2D)
+    b2BodyDef bodyDef = b2DefaultBodyDef();
+    bodyDef.position = {x, y}; 
+    b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
 
-//Box2D pide la mitad del ancho y alto
-b2Polygon box = b2MakeBox(width / 2.0f, height / 2.0f);
-b2ShapeDef shapeDef = b2DefaultShapeDef();
-b2CreatePolygonShape(bodyId, &shapeDef, &box);
+    b2Polygon box = b2MakeBox(width / 2.0f, height / 2.0f);
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    b2CreatePolygonShape(bodyId, &shapeDef, &box);
 
-//2.SFML (Para aplicar los graficos)
-sf::RectangleShape shape(sf::Vector2f(width, height));
-shape.setOrigin(width / 2.0f, height / 2.0); //Origen al centro igual que Box2D
-shape.setPosition(x, y);
+    // 2. SFML
+    sf::RectangleShape shape(sf::Vector2f(width, height));
+    shape.setOrigin(width / 2.0f, height / 2.0); 
+    shape.setPosition(x, y);
 
-//Aplicamos Color 
-shape.setFillColor(sf::Color(0, 180, 0)); //Verde Oscuro
-shape.setOutlineThickness(2.0f);
-shape.setOutlineColor(sf::Color::White);
+    shape.setFillColor(sf::Color(0, 180, 0)); 
+    shape.setOutlineThickness(2.0f);
+    shape.setOutlineColor(sf::Color::White);
 
-//3.Guardamos en la lista para despues dibujarlo
-platformShapes.push_back(shape);
+    // 3. Guardamos
+    platformShapes.push_back(shape);
 }

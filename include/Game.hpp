@@ -64,4 +64,10 @@ private:
     float damageTimer; //Tiempo de invencibilidad
     sf::RectangleShape healthBar; //La barra verde
     sf::RectangleShape healthBarBack; //Fondo gris/rojo de la barra
+
+    //Energia del omnitrix
+    float maxEnergy; //Energia maxima 
+    float currentEnergy; //Energia Actual
+    sf::RectangleShape energyBar; //La barra amarilla
+    sf::RectangleShape energyBarBack; //El fondo de la barra
 };
