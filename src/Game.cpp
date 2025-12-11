@@ -15,17 +15,23 @@ Game::Game() {
 
     // 3. Diseñamos el nivel
     // 3.1. El suelo Principal (Que sea Grande y este por debajo)
-    createPlatform(400.0f, 580.0f, 800.0f, 40.0f);
+    createPlatform(2500.0f, 580.0f, 5000.0f, 40.0f);
 
     // 3.2. Plataformas flotantes (Para hacer PARKOUUUR :D)
     createPlatform(600.0f, 450.0f, 200.0f, 20.0f); // Derecha baja
     createPlatform(200.0f, 350.0f, 200.0f, 20.0f); // Izquierda al medio
     createPlatform(500.0f, 200.0f, 150.0f, 20.0f); // Arriba centro
+    //Otra plataforma
+    createPlatform(2500.0f, 400.0f, 300.0f, 20.0f);
+    createPlatform(1200.0f, 400.0f, 200.0f, 20.0f); // Kilómetro 1
+    createPlatform(2000.0f, 300.0f, 200.0f, 20.0f); // Kilómetro 2
+    createPlatform(3000.0f, 450.0f, 200.0f, 20.0f); // Kilómetro 3
+    createPlatform(4000.0f, 350.0f, 200.0f, 20.0f); // Kilómetro 4
 
     // 4. Crear Cuerpo Físico de Ben (La caja invisible que choca)
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
-    bodyDef.position = {400.0f, -100.0f}; // Aseguramos que inicie en el aire y que caiga a cierta altura
+    bodyDef.position = {100.0f, 450.0f}; // Aseguramos que inicie en el aire y que caiga a cierta altura
     benBodyId = b2CreateBody(worldId, &bodyDef);
     b2Body_SetFixedRotation(benBodyId, true);
 
@@ -107,7 +113,7 @@ Game::Game() {
     goalShape.setOrigin(20.0f, 20.0f);
 
     // Posicion: En la plataforma floatante del centro-arriba
-    goalShape.setPosition(500.0f,150.0f);
+    goalShape.setPosition(4800.0f,500.0f);
 
     shootCooldown = 0.0f; // Listo para disparar
 
