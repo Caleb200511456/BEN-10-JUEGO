@@ -4,12 +4,22 @@
 #include <box2d/box2d.h>
 #include <vector> 
 
+//Estructura de datos
 struct Projectile{
     sf::CircleShape shape; //La forma(bola naranja)
     float speed;
     bool destroy;
     float lifetime; 
 }; 
+
+//Estado del juego
+enum GameState {
+    MENU,       // Pantalla de inicio
+    INSTRUCTIONS, //Pantalla de controles 
+    PLAYING,    // Jugando normal
+    GAME_OVER,  // Perdiste
+    VICTORY     // Ganaste
+};
 
 class Game {
 public:
@@ -25,6 +35,7 @@ private:
     void render();
 
     void createPlatform(float x, float y, float width, float height);
+    void resetLevel(); // Función para reiniciar el juego
 
     sf::RenderWindow window;
     b2WorldId worldId;
@@ -97,4 +108,21 @@ private:
     sf::SoundBuffer hitBuffer;
     sf::Sound hitSound; //Para cuando me peguen 
 
+    //Menus y textos
+    GameState gameState; // En qué estado estamos
+    sf::Font font;       // La tipografía (letra)
+    sf::Text titleText;  // "BEN 10"
+    sf::Text startText;  // "Press Enter"
+    sf::Text instructionsText; //Texto de instrucciones
+    sf::Text gameOverText; // "GAME OVER"
+    sf::Text restartText;  // "Press R"
+    //Variables para el fondo
+    sf::Texture menuTexture;
+    sf::Sprite menuSprite;
+    //fondo in game 
+    sf::Texture levelTexture;
+    sf::Sprite levelSprite;
+    //imagen de premio
+    sf::Texture goalTexture;
+    sf::Sprite goalSprite;
 };
