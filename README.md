@@ -172,3 +172,4 @@ note right of Game::spawnEnemy
 end note
 
 @enduml
+Tomado como base para el diagrama.
