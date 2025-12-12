@@ -4,7 +4,7 @@
 
 Game::Game() {
     // 1. Iniciar Ventana
-    window.create(sf::VideoMode(800, 600), "Ben 10: QUEST FOR THE OMNITRIX - Sprite Version");
+    window.create(sf::VideoMode(800, 600), "KEN 11: QUEST FOR THE OMNICLOCK");
     window.setFramerateLimit(60); 
 
     // Estado inicial
@@ -152,7 +152,7 @@ Game::Game() {
     }
     //11.1.Titulo
     titleText.setFont(font);
-    titleText.setString("BEN 10: QUEST FOR THE OMNITRIX");
+    titleText.setString("KEN 11: QUEST FOR THE OMNICLOCK");
     titleText.setCharacterSize(30);
     titleText.setFillColor(sf::Color(56, 227, 56));
     titleText.setStyle(sf::Text::Bold);
@@ -435,9 +435,6 @@ void Game::update() {
     } else {
         healthBar.setFillColor(sf::Color::Green); 
     }
-    //QUe el icono del Omnitrix gire
-    goalSprite.rotate(90.0f * dt);
-
     // VICTORIA
     if(benSprite.getGlobalBounds().intersects(goalShape.getGlobalBounds())){
         gameState = VICTORY; 
