@@ -4,7 +4,7 @@
 
 Game::Game() {
     // 1. Iniciar Ventana
-    window.create(sf::VideoMode(800, 600), "Ben 10: Savage Pursuit - Sprite Version");
+    window.create(sf::VideoMode(800, 600), "Ben 10: QUEST FOR THE OMNITRIX - Sprite Version");
     window.setFramerateLimit(60); 
 
     // Estado inicial
@@ -168,8 +168,8 @@ Game::Game() {
     //Usamos \n para salto de linea 
     instructionsText.setString(
         "CONTROLES:\n\n"
-        "A -> Izquierda\n"
-        "D -> Derecha\n"
+        "A o (<) -> Izquierda\n"
+        "D o (>)-> Derecha\n"
         "SPACE -> Saltar\n"
         "Z -> Transformar (Fuego)\n"
         "X -> Disparar\n\n"
