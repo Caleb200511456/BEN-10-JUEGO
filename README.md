@@ -1,5 +1,5 @@
 # BEN-10-JUEGO
-hola esto es una prueba de conexion.
+Hola esto es una prueba de conexion.
 // ... (Debajo de las plataformas viejas)
 
     // REFERENCIAS VISUALES PARA EL CAMINO
@@ -67,3 +67,108 @@ hola esto es una prueba de conexion.
 
     // 4. COLISIÓN BALAS VS ENEMIGOS (Esto va dentro del bucle de balas)
     // (Necesitas actualizar tu bucle de proyectiles para que revise 'enemies' en vez de 'enemyShape')
+
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+' --- Enumeradores ---
+enum GameState {
+    MENU
+    INSTRUCTIONS
+    PLAYING
+    GAME_OVER
+    VICTORY
+}
+
+' --- Estructuras Auxiliares ---
+class Projectile {
+    + sf::CircleShape shape
+    + float speed
+    + float lifetime
+    + bool destroy
+}
+
+class Enemy {
+    + b2BodyId bodyId
+    + sf::RectangleShape shape
+    + float speed
+    + float startX
+    + float patrolRange
+    + bool destroy
+}
+
+' --- Clase Principal ---
+class Game {
+    ' Atributos Privados
+    - sf::RenderWindow window
+    - GameState gameState
+    
+    ' Fisica
+    - b2WorldId worldId
+    - b2BodyId benBodyId
+    
+    ' Graficos Jugador
+    - sf::Sprite benSprite
+    - sf::Texture benTexture
+    - sf::Texture heatblastTexture
+    - bool isHeatblast
+    
+    ' Elementos del Juego
+    - std::vector<Enemy> enemies
+    - std::vector<Projectile> projectiles
+    - std::vector<sf::RectangleShape> platformShapes
+    - sf::Sprite goalSprite
+    - sf::RectangleShape goalShape
+    
+    ' Interfaz (GUI)
+    - int maxHealth
+    - int currentHealth
+    - float maxEnergy
+    - float currentEnergy
+    - sf::RectangleShape healthBar
+    - sf::RectangleShape energyBar
+    
+    ' Fondos y Textos
+    - sf::Sprite menuSprite
+    - sf::Sprite levelSprite
+    - sf::Text titleText
+    - sf::Text gameOverText
+    
+    ' Metodos Publicos
+    + Game()
+    + ~Game()
+    + void run()
+    
+    ' Metodos Privados (Logica Interna)
+    - void processEvents()
+    - void update()
+    - void render()
+    - void spawnEnemy(float x, float y, float range)
+    - void createPlatform(float x, float y, float w, float h)
+    - void resetLevel()
+}
+
+' --- Relaciones ---
+
+' Game tiene muchos Enemigos y Proyectiles (Composición)
+Game -- "" Enemy : contiene >
+Game -- "" Projectile : contiene >
+
+' Game usa el Enum de Estado
+Game ..> GameState : usa >
+
+' Notas explicativas
+note right of Game::run
+  Bucle principal del juego
+  (Game Loop)
+end note
+
+note right of Game::spawnEnemy
+  Crea enemigos dinámicamente
+  en el vector enemies
+end note
+
+@enduml
